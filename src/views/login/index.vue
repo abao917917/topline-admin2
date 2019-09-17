@@ -29,15 +29,16 @@
 </template>
 
 <script>
-import axios from 'axios'
-import '@/vendor/gt.js'
+import axios from 'axios';
+import '@/vendor/gt.js';
 export default {
   name: 'AppLogin',
   data () {
     return {
       form: {
         mobile: '13683109553',
-        code: ''
+        code: '',
+        captchaObj: null
       }
     };
   },
@@ -47,21 +48,39 @@ export default {
     },
     handleSendCode () {
       const { mobile } = this.form;
+      if (this.captchaObj) {
+        return this.captchaObj.verify()
+      }
       axios({
         method: 'GET',
         url: `http://ttapi.research.itcast.cn/mp/v1_0/captchas/${mobile}`
       }).then(res => {
-        const data = res.data.data
-        window.initGeetest({
-          // 以下配置参数来自服务端 SDK
-          gt: data.gt,
-          challenge: data.challenge,
-          offline: !data.success,
-          new_captcha: true
-        }, function (captchaObj) {
-          // 这里可以调用验证实例 captchaObj 的实例方法
-          console.log(captchaObj)
-        })
+        const data = res.data.data;
+        window.initGeetest(
+          {
+            // 以下配置参数来自服务端 SDK
+            gt: data.gt,
+            challenge: data.challenge,
+            offline: !data.success,
+            new_captcha: true,
+            product: 'bind'
+          },
+          (captchaObj) => {
+            this.captchaObj = captchaObj
+            // 这里可以调用验证实例 captchaObj 的实例方法
+            console.log(captchaObj);
+            captchaObj.onReady(function () {
+              // 验证码ready之后才能调用verify方法显示验证码
+              captchaObj.verify(); // 显示验证码
+            })
+              .onSuccess(function () {
+                console.log('验证成功了')
+              })
+              .onError(function () {
+                // your code
+              });
+          }
+        );
       });
     }
   }
