@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-undef */
 <template>
   <div class="login-warp">
     <div class="login-form-warp">
@@ -27,7 +29,8 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from 'axios'
+import '@/vendor/gt.js'
 export default {
   name: 'AppLogin',
   data () {
@@ -48,7 +51,17 @@ export default {
         method: 'GET',
         url: `http://ttapi.research.itcast.cn/mp/v1_0/captchas/${mobile}`
       }).then(res => {
-        console.log(res.data);
+        const data = res.data.data
+        window.initGeetest({
+          // 以下配置参数来自服务端 SDK
+          gt: data.gt,
+          challenge: data.challenge,
+          offline: !data.success,
+          new_captcha: true
+        }, function (captchaObj) {
+          // 这里可以调用验证实例 captchaObj 的实例方法
+          console.log(captchaObj)
+        })
       });
     }
   }
