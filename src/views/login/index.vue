@@ -20,7 +20,7 @@
             </el-col>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" class="btn-login" @click="onSubmit">登录</el-button>
+            <el-button type="primary" class="btn-login" @click="handleLogin">登录</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -36,15 +36,34 @@ export default {
   data () {
     return {
       form: {
-        mobile: '13683109553',
+        mobile: '',
         code: '',
         captchaObj: null
       }
     };
   },
   methods: {
-    onSubmit () {
-      console.log('submit!');
+    handleLogin () {
+      axios({
+        method: 'POST',
+        url: 'http://ttapi.research.itcast.cn/mp/v1_0/authorizations',
+        data: this.form
+      }).then(res => { // >=200$<=400的状态码都会进入这里
+        // Element中提供的Message消息提示组件，这也是组件调用的一种形式
+        this.$message({
+          message: '登录成功',
+          type: 'success'
+        })
+        // 建议路由跳转都使用name去跳转，路由传参非常方便
+        this.$router.push({
+          name: 'home'
+        })
+      }).catch(err => { // >=400的状态码都会进入这里
+        // console.dir(err) 打印出来的结果总response中有status
+        if (err.response.status === 400) {
+          this.$message.error('错了哦，这是一条错误消息');
+        }
+      })
     },
     handleSendCode () {
       const { mobile } = this.form;
@@ -68,17 +87,30 @@ export default {
           (captchaObj) => {
             this.captchaObj = captchaObj
             // 这里可以调用验证实例 captchaObj 的实例方法
-            console.log(captchaObj);
+            // console.log(captchaObj);
             captchaObj.onReady(function () {
               // 验证码ready之后才能调用verify方法显示验证码
               captchaObj.verify(); // 显示验证码
             })
               .onSuccess(function () {
-                console.log('验证成功了')
+                // console.log('验证成功了')
+                const {
+                  geetest_challenge: challenge,
+                  geetest_seccode: seccode,
+                  geetest_validate: validate
+                } = captchaObj.getValidate()
+                axios({
+                  method: 'GET',
+                  url: `http://ttapi.research.itcast.cn/mp/v1_0/sms/codes/${mobile}`,
+                  parmas: {
+                    challenge,
+                    seccode,
+                    validate
+                  }
+                }).then(res => {
+                  console.log(res.data)
+                })
               })
-              .onError(function () {
-                // your code
-              });
           }
         );
       });
