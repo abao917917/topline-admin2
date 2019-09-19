@@ -26,7 +26,12 @@
             </el-col>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" class="btn-login" @click="handleLogin">登录</el-button>
+            <el-button
+            type="primary"
+            class="btn-login"
+             @click="handleLogin"
+             :loading="loginLoading"
+             >登录</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -46,6 +51,7 @@ export default {
         code: '',
         captchaObj: null
       },
+      loginLoading: false, // 登录按钮的loading状态true是在加载，false是可以点击状态；
       rules: {
         mobile: [
           { required: true, message: '请输入手机号', trigger: 'blur' },
@@ -68,6 +74,7 @@ export default {
       })
     },
     submitLogin () {
+      this.loginLoading = true
       axios({
         method: 'POST',
         url: 'http://ttapi.research.itcast.cn/mp/v1_0/authorizations',
@@ -79,6 +86,7 @@ export default {
           message: '登录成功',
           type: 'success'
         });
+        this.loginLoading = false
         // 建议路由跳转都使用name去跳转，路由传参非常方便
         this.$router.push({
           name: 'home'
@@ -87,8 +95,9 @@ export default {
         // >=400的状态码都会进入这里
         // console.dir(err) 打印出来的结果总response中有status
         if (err.response.status === 400) {
-          this.$message.error('错了哦，这是一条错误消息');
+          this.$message.error('登录失败，手机号或验证码错误');
         }
+        this.loginLoading = false
       })
     },
 
